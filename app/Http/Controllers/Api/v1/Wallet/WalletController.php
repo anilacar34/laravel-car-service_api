@@ -109,7 +109,7 @@ class WalletController extends BaseController
 
         $validator = Validator::make($requestBody,
             [
-                'transaction_id' => ['regex:/^(\d{1,20})(,\d{1,20})*$/'],
+                'transaction_ids'=> ['regex:/^(\d{1,20})(,\d{1,20})*$/'],
                 'limit'          => 'numeric|max:100',
                 'page'           => 'numeric|int',
                 'type'           => 'in:add_balance,payout,cancel'
