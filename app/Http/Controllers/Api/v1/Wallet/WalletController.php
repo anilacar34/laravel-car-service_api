@@ -126,6 +126,14 @@ class WalletController extends BaseController
                 $query->where(['user_id' => auth()->user()->id]);
             });
 
+            if ($requestBody['transaction_ids'] ?? null) {
+                $transactionHistory->whereIn('id',explode(',', $requestBody['transaction_ids']));
+            }
+
+            if(!empty($requestBody['type'])){
+                $transactionHistory->where('process_type',$requestBody['type']);
+            }
+
             $transactionHistory = $transactionHistory->paginate($limit,page:$page);
             $transactionHistory = TransactionHistoryResource::collection($transactionHistory);
 
