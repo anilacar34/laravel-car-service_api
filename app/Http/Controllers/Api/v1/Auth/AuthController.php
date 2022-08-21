@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1\Auth;
 
 use App\Http\Controllers\Api\v1\BaseController;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -45,7 +46,7 @@ class AuthController extends BaseController
                     'access_token' => $userToken->plainTextToken,
                     'expires_in'   => 3600,
                     'token_type'   => 'Bearer',
-                    'created_at'   => $userToken->accessToken->created_at,
+                    'created_at'   => Carbon::parse($userToken->accessToken->created_at)->format('Y-m-d H:i:s')
                 ],
                 'app'   => $userToken->accessToken->name
             ];
@@ -96,7 +97,7 @@ class AuthController extends BaseController
                     'access_token' => $userToken->plainTextToken,
                     'expires_in'   => 3600,
                     'token_type'   => 'Bearer',
-                    'created_at'   => $userToken->accessToken->created_at,
+                    'created_at'   => Carbon::parse($userToken->accessToken->created_at)->format('Y-m-d H:i:s')
                 ],
                 'app'   => $userToken->accessToken->name
             ];
