@@ -91,6 +91,7 @@ class AuthController extends BaseController
 
             $tokenData = [
                 'user'  => $user->name,
+                'roles' => $user->getRoleNames(),
                 'token' => [
                     'access_token' => $userToken->plainTextToken,
                     'expires_in'   => 3600,
