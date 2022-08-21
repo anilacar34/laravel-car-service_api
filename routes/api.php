@@ -41,7 +41,7 @@ Route::prefix('v1')->group(function (){
         Route::prefix('wallet')->middleware(['role:user'])->group(function(){
             Route::post('addBalance',[WalletController::class,'addBalance']);
             Route::get('balance',[WalletController::class,'getBalance']);
-            Route::get('balance/summary',[WalletController::class,'getBalanceHistory']);
+            Route::get('balance/history',[WalletController::class,'getBalanceHistory']);
             Route::post('payout',[WalletController::class,'payout']);
         });
 
