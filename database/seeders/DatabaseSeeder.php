@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 
@@ -39,6 +40,16 @@ class DatabaseSeeder extends Seeder
             $user->updated_by = 1;
             $user->saveQuietly();
         }
+        // admin user wallet create for case structure, normally admin have not a wallet.
+        $userWallet = Wallet::where(['user_id'=>1])->first();
+        if (!$userWallet) {
+            $wallet = new Wallet;
+            $wallet->id = 1;
+            $wallet->user_id = 1;
+            $wallet->created_by = 1;
+            $wallet->updated_by = 1;
+            $wallet->saveQuietly();
+        }
 
         $role = Role::where([
             'name'       => 'admin',
@@ -69,6 +80,17 @@ class DatabaseSeeder extends Seeder
             $user->created_by = 2;
             $user->updated_by = 2;
             $user->saveQuietly();
+        }
+
+        // user wallet create
+        $userWallet = Wallet::where(['user_id'=>2])->first();
+        if (!$userWallet) {
+            $wallet = new Wallet;
+            $wallet->id = 2;
+            $wallet->user_id = 2;
+            $wallet->created_by = 2;
+            $wallet->updated_by = 2;
+            $wallet->saveQuietly();
         }
 
         $role = Role::where([

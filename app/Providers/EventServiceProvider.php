@@ -2,7 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Car;
+use App\Models\CarBrand;
+use App\Models\CarModel;
+use App\Models\CarModelYear;
+use App\Models\TransactionHistory;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Observers\GeneralObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -30,6 +36,8 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         User::observe(GeneralObserver::class);
+        Wallet::observe(GeneralObserver::class);
+        TransactionHistory::observe(GeneralObserver::class);
     }
 
     /**
