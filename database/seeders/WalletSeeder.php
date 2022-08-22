@@ -2,13 +2,14 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class WalletSeeder extends Seeder
 {
+    use WithoutModelEvents;
     /**
      * Seed the application's database.
      *
