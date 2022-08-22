@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             WalletSeeder::class,
             PermissionSeeder::class,
+            CarServiceSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
 

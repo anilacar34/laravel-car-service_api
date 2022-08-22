@@ -6,6 +6,7 @@ use App\Models\Car;
 use App\Models\CarBrand;
 use App\Models\CarModel;
 use App\Models\CarModelYear;
+use App\Models\CarService;
 use App\Models\TransactionHistory;
 use App\Models\User;
 use App\Models\Wallet;
@@ -38,6 +39,7 @@ class EventServiceProvider extends ServiceProvider
         User::observe(GeneralObserver::class);
         Wallet::observe(GeneralObserver::class);
         TransactionHistory::observe(GeneralObserver::class);
+        CarService::observe(GeneralObserver::class);
     }
 
     /**

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\v1\Auth\AuthController;
 use App\Http\Controllers\Api\v1\Auth\PermissionController;
 use App\Http\Controllers\Api\v1\Car\CarController;
+use App\Http\Controllers\Api\v1\Car\CarServiceController;
 use App\Http\Controllers\Api\v1\Wallet\WalletController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,10 @@ Route::prefix('v1')->group(function (){
             Route::get('balance',[WalletController::class,'getBalance']);
             Route::get('balance/history',[WalletController::class,'getBalanceHistory']);
             Route::post('payout',[WalletController::class,'payout']);
+        });
+
+        Route::prefix('services')->middleware(['role:user'])->group(function(){
+            Route::get('/',[CarServiceController::class,'getServices']);
         });
 
         Route::post('logout',[AuthController::class,'logout']);
