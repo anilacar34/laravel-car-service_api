@@ -14,6 +14,38 @@ class AuthController extends BaseController
 {
     use HasApiTokens;
 
+    public function getUser(){
+        $status = false;
+        $message = 'Failed, user not retrieved!';
+        $responseCode = 400;
+
+        $userData = User::find(auth()->user()->id);
+
+        if($userData){
+            $successData = [
+                'name'  =>$userData->name,
+                'email'  =>$userData->email,
+            ];
+
+            $status = true;
+            $message = 'Success, user successfully retrieved!';
+            $responseCode = 200;
+        }
+
+        $result = [
+            'status'  => $status,
+            'message' => $message,
+            'data'    => array_filter([
+                'success' => $successData ?? [],
+                'failed'  => array_filter([
+                    'payload_error' => $validationErrors ?? [],
+                ])
+            ])
+        ];
+
+        return response()->json($result, $responseCode, []);
+    }
+
     public function createUser(Request $request){
         $status = false;
         $message = 'Failed, user registration unsuccessfully !';

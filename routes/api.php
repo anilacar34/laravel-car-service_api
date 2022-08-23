@@ -46,6 +46,10 @@ Route::prefix('v1')->group(function (){
             Route::post('payout',[WalletController::class,'payout']);
         });
 
+        Route::prefix('user')->middleware(['role:user'])->group(function(){
+            Route::get('/',[AuthController::class,'getUser']);
+        });
+
         Route::prefix('services')->middleware(['role:user'])->group(function(){
             Route::get('/',[CarServiceController::class,'getServices']);
         });
