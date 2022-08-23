@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('wallet', function (Blueprint $table) {
+        Schema::create('wallets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->unique()->references('id')->on('user')->onDelete('cascade');
+            $table->foreignId('user_id')->unique()->references('id')->on('users')->onDelete('cascade');
             $table->string('currency')->default('EUR');
             $table->float('balance',15,2)->default(0.00);
             $table->foreignId('created_by')->nullable()->references('id')->on('users')->onDelete('cascade');
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('wallet');
+        Schema::dropIfExists('wallets');
     }
 };

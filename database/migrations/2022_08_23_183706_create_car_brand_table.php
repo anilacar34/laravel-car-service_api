@@ -13,13 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('transaction_histories', function (Blueprint $table) {
+        Schema::create('car_brands', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('wallet_id')->references('id')->on('wallets')->onDelete('cascade');
-            $table->unsignedFloat('amount',15,2)->nullable();
-            $table->unsignedFloat('balance_before',15,2)->nullable();
-            $table->unsignedFloat('balance_after',15,2)->nullable();
-            $table->enum('process_type',['add_balance','payout','cancel']);
+            $table->string('name')->unique()->index();
             $table->foreignId('created_by')->nullable()->references('id')->on('users')->onDelete('cascade');
             $table->foreignId('updated_by')->nullable()->references('id')->on('users')->onDelete('cascade');
             $table->foreignId('deleted_by')->nullable()->references('id')->on('users')->onDelete('cascade');
@@ -35,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('transaction_histories');
+        Schema::dropIfExists('car_brands');
     }
 };

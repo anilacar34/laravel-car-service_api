@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Models\Car;
 use App\Models\CarBrand;
-use App\Models\CarModel;
 use App\Models\CarModelYear;
 use App\Models\CarService;
 use App\Models\TransactionHistory;
@@ -14,7 +13,6 @@ use App\Observers\GeneralObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -40,6 +38,9 @@ class EventServiceProvider extends ServiceProvider
         Wallet::observe(GeneralObserver::class);
         TransactionHistory::observe(GeneralObserver::class);
         CarService::observe(GeneralObserver::class);
+        Car::observe(GeneralObserver::class);
+        CarBrand::observe(GeneralObserver::class);
+        CarModelYear::observe(GeneralObserver::class);
     }
 
     /**

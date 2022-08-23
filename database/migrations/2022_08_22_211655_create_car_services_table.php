@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('car_service', function (Blueprint $table) {
+        Schema::create('car_services', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->float('price',15,2);

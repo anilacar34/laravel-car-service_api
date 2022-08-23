@@ -54,6 +54,10 @@ Route::prefix('v1')->group(function (){
             Route::get('/',[CarServiceController::class,'getServices']);
         });
 
+        Route::prefix('cars')->middleware(['role:user'])->group(function(){
+            Route::get('/',[CarController::class,'getCars']);
+        });
+
         Route::post('logout',[AuthController::class,'logout']);
     });
 });
