@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1\Auth;
 use App\Http\Controllers\Api\v1\BaseController;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -20,7 +21,14 @@ class PermissionController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
-        $role = Role::create(['name' => $request['name']]);
+        DB::beginTransaction();
+        try{
+            $role = Role::create(['name' => $request['name']]);
+            DB::commit();
+        }catch (\Exception $e) {
+            DB::rollback();
+            return $this->sendInternalError();
+        }
 
         return $this->sendResponse($role->toArray(), 'Role created successfully.');
     }
@@ -35,7 +43,14 @@ class PermissionController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors());
         }
 
-        $permission = Permission::create(['name' => $request['name']]);
+        DB::beginTransaction();
+        try{
+            $permission = Permission::create(['name' => $request['name']]);
+            DB::commit();
+        }catch (\Exception $e) {
+            DB::rollback();
+            return $this->sendInternalError();
+        }
 
         return $this->sendResponse($permission->toArray(), 'Permission created successfully.');
 

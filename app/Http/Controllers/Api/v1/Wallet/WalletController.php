@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\v1\Wallet;
 use App\Http\Controllers\Api\v1\BaseController;
 use App\Http\Resources\TransactionHistoryResource;
 use App\Models\TransactionHistory;
+use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class WalletController extends BaseController
@@ -29,17 +31,25 @@ class WalletController extends BaseController
             $wallet = Wallet::where(['user_id'=>auth()->user()->id])->first();
 
             if($wallet){
-                $wallet->balance = $wallet->balance + $requestBody['balance'];
-                $oldBalance = $wallet->getOriginal('balance');
-                $wallet->save();
 
-                $transactionHistory = new TransactionHistory;
-                $transactionHistory->wallet_id = $wallet->id;
-                $transactionHistory->amount = $requestBody['balance'];
-                $transactionHistory->balance_before = $oldBalance;
-                $transactionHistory->balance_after = $wallet->balance;
-                $transactionHistory->process_type = 'add_balance';
-                $transactionHistory->save();
+                DB::beginTransaction();
+                try{
+                    $wallet->balance = $wallet->balance + $requestBody['balance'];
+                    $oldBalance = $wallet->getOriginal('balance');
+                    $wallet->save();
+
+                    $transactionHistory = new TransactionHistory;
+                    $transactionHistory->wallet_id = $wallet->id;
+                    $transactionHistory->amount = $requestBody['balance'];
+                    $transactionHistory->balance_before = $oldBalance;
+                    $transactionHistory->balance_after = $wallet->balance;
+                    $transactionHistory->process_type = 'add_balance';
+                    $transactionHistory->save();
+                    DB::commit();
+                }catch (\Exception $e) {
+                    DB::rollback();
+                    return $this->sendInternalError();
+                }
 
                 $message = 'User balance increase process successfully !';
                 $status = true;
@@ -183,17 +193,25 @@ class WalletController extends BaseController
                 if($wallet->balance < $requestBody['amount']){
                     $paymentError = 'insufficient balance !';
                 }else{
-                    $wallet->balance = $wallet->balance - $requestBody['amount'];
-                    $oldBalance = $wallet->getOriginal('balance');
-                    $wallet->save();
 
-                    $transactionHistory = new TransactionHistory;
-                    $transactionHistory->wallet_id = $wallet->id;
-                    $transactionHistory->amount = $requestBody['amount'];
-                    $transactionHistory->balance_before = $oldBalance;
-                    $transactionHistory->balance_after = $wallet->balance;
-                    $transactionHistory->process_type = 'payout';
-                    $transactionHistory->save();
+                    DB::beginTransaction();
+                    try{
+                        $wallet->balance = $wallet->balance - $requestBody['amount'];
+                        $oldBalance = $wallet->getOriginal('balance');
+                        $wallet->save();
+
+                        $transactionHistory = new TransactionHistory;
+                        $transactionHistory->wallet_id = $wallet->id;
+                        $transactionHistory->amount = $requestBody['amount'];
+                        $transactionHistory->balance_before = $oldBalance;
+                        $transactionHistory->balance_after = $wallet->balance;
+                        $transactionHistory->process_type = 'payout';
+                        $transactionHistory->save();
+                        DB::commit();
+                    }catch (\Exception $e) {
+                        DB::rollback();
+                        return $this->sendInternalError();
+                    }
 
                     $message = 'User balance decrease process successfully !';
                     $status = true;
@@ -213,7 +231,7 @@ class WalletController extends BaseController
                     'currency'=> $wallet->currency ?? null
                 ]),
                 'failed' => array_filter([
-                    'payment_error' => $paymentError,
+                    'payment_error' => $paymentError ?? '',
                     'wallet_error'  => $walletError ?? '',
                     'payload_error' => $validationErrors ?? [],
                 ])

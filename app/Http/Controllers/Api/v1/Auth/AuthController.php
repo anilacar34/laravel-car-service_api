@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends BaseController
 {
@@ -64,11 +65,19 @@ class AuthController extends BaseController
         }else{
             $requestBody = $request->all();
             $requestBody['password'] = bcrypt($requestBody['password']);
-            $user = User::create([
-                'name'  => $requestBody['name'],
-                'email'  => $requestBody['email'],
-                'password'  => $requestBody['password'],
-            ]);
+
+            DB::beginTransaction();
+            try{
+                $user = User::create([
+                    'name'  => $requestBody['name'],
+                    'email'  => $requestBody['email'],
+                    'password'  => $requestBody['password'],
+                ]);
+                DB::commit();
+            }catch (\Exception $e) {
+                DB::rollback();
+                return $this->sendInternalError();
+            }
 
             $userToken = $user->createToken('CarServiceAppV1');
 

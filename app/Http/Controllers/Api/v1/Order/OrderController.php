@@ -10,10 +10,12 @@ use App\Models\CarModelYear;
 use App\Models\CarService;
 use App\Models\Order;
 use App\Models\TransactionHistory;
+use App\Models\User;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends BaseController
@@ -118,27 +120,37 @@ class OrderController extends BaseController
             }
 
             if(!$validationErrors){
-                $payout = $this->payout($carService->price);
 
-                if($payout['status']){
-                    $order = new Order;
-                    $order->model_id = $carModelYear->id;
-                    $order->service_id = $requestBody['car_service_id'];
-                    $order->transaction_id = $payout['transaction_id'];
-                    $order->status = 'ongoing';
-                    $order->is_paid = 1;
-                    $order->save();
+                DB::beginTransaction();
+                try{
+                    $payout = $this->payout($carService->price);
 
-                    if($order->id){
-                        $status = true;
-                        $message = 'Success, placed order !';
-                        $responseCode = 200;
+                    if($payout['status']){
+
+                        $order = new Order;
+                        $order->model_id = $carModelYear->id;
+                        $order->service_id = $requestBody['car_service_id'];
+                        $order->transaction_id = $payout['transaction_id'];
+                        $order->status = 'ongoing';
+                        $order->is_paid = 1;
+                        $order->save();
+
+                        if($order->id){
+                            $status = true;
+                            $message = 'Success, placed order !';
+                            $responseCode = 200;
+                        }
+                    }else{
+                        $status = false;
+                        $message = $payout['message'];
+                        $responseCode = 400;
                     }
-                }else{
-                    $status = false;
-                    $message = $payout['message'];
-                    $responseCode = 400;
+                    DB::commit();
+                }catch (\Exception $e) {
+                    DB::rollback();
+                    return $this->sendInternalError();
                 }
+
             }
         }
 
@@ -178,18 +190,24 @@ class OrderController extends BaseController
                 if($wallet->balance < $amount){
                     $message = 'insufficient_balance';
                 }else{
-                    $wallet->balance = $wallet->balance - $amount;
-                    $oldBalance = $wallet->getOriginal('balance');
-                    $wallet->save();
+                    DB::beginTransaction();
+                    try{
+                        $wallet->balance = $wallet->balance - $amount;
+                        $oldBalance = $wallet->getOriginal('balance');
+                        $wallet->save();
 
-                    $transactionHistory = new TransactionHistory;
-                    $transactionHistory->wallet_id = $wallet->id;
-                    $transactionHistory->amount = $amount;
-                    $transactionHistory->balance_before = $oldBalance;
-                    $transactionHistory->balance_after = $wallet->balance;
-                    $transactionHistory->process_type = 'payout';
-                    $transactionHistory->save();
-
+                        $transactionHistory = new TransactionHistory;
+                        $transactionHistory->wallet_id = $wallet->id;
+                        $transactionHistory->amount = $amount;
+                        $transactionHistory->balance_before = $oldBalance;
+                        $transactionHistory->balance_after = $wallet->balance;
+                        $transactionHistory->process_type = 'payout';
+                        $transactionHistory->save();
+                        DB::commit();
+                    }catch (\Exception $e) {
+                        DB::rollback();
+                        return $this->sendInternalError();
+                    }
                     $message = 'payout';
                     $status = true;
                 }
@@ -207,7 +225,17 @@ class OrderController extends BaseController
     }
 
     public function orderComplete(){
-        return Order::where(['status'=>'ongoing','is_paid'=>true])
-            ->update(['status'=>'completed']);
+
+        DB::beginTransaction();
+        try{
+            $order = Order::where(['status'=>'ongoing','is_paid'=>true])
+                ->update(['status'=>'completed']);
+            DB::commit();
+        }catch (\Exception $e) {
+            DB::rollback();
+            return 'error'; // log
+        }
+
+        return $order;
     }
 }

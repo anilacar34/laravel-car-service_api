@@ -35,4 +35,13 @@ class BaseController extends Controller
 
         return response()->json($response,$code,[]);
     }
+
+    public function sendInternalError(){
+        $response = [
+            'success'   => false,
+            'message'   => 'Internal error, your request is not processed!',
+        ];
+
+        return response()->json($response,500,[]);
+    }
 }
