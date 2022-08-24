@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Console\Commands\SyncCars;
+use App\Console\Commands\OrderComplete;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -22,6 +23,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('car:sync')->hourly();
+        $schedule->command('order:complete')->daily();
     }
 
     /**
