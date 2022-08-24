@@ -10,7 +10,7 @@ class TransactionHistory extends Model
 {
     use HasFactory,SoftDeleteCustom;
 
-    protected $table = 'transaction_history';
+    protected $table = 'transaction_histories';
 
     protected $guarded = [];
 

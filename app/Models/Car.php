@@ -10,7 +10,7 @@ class Car extends Model
 {
     use HasFactory,SoftDeleteCustom;
 
-    protected $table = 'car';
+    protected $table = 'cars';
 
     protected $guarded = [];
 

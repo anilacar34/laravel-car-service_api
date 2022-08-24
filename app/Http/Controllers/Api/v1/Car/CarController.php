@@ -89,8 +89,7 @@ class CarController extends BaseController
 
                     // car model year
                     $carModelYearList = array_map('intval', explode(' - ',$carItem->year));
-
-                    if($carModelYearList[1] ?? []){
+                    if(isset($carModelYearList[1])){
                         if($carModelYearList[1] === 0){ // equal to 'present'
                             $carModelYearList[1] = Carbon::now()->year;
                         }

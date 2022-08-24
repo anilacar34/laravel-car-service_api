@@ -10,7 +10,7 @@ class Wallet extends Model
 {
     use HasFactory,SoftDeleteCustom;
 
-    protected $table = 'wallet';
+    protected $table = 'wallets';
 
     protected $guarded = [];
 
