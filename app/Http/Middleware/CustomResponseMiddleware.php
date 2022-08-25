@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use App\Models\Wallet;
 use Closure;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 
 class CustomResponseMiddleware
 {
@@ -18,13 +20,20 @@ class CustomResponseMiddleware
     {
         $response = $next($request);
 
-        if(auth()->user()->id ?? null){
-            $wallet = Wallet::where(['user_id'=>auth()->user()->id])->first();
-            if($wallet){
-                $response->header('User-Balance', $wallet->balance);
+        $cachedWallet = Redis::get('wallet_' . auth()->user()->id);
+
+        if(isset($cachedWallet)) {
+            $walletBalance = $cachedWallet;
+        }else{
+            if(auth()->user()->id ?? null){
+                $wallet = Wallet::where(['user_id'=>auth()->user()->id])->first();
+                if($wallet){
+                    $walletBalance = $wallet->balance;
+                    Redis::set('wallet_' . auth()->user()->id, $wallet->balance);
+                }
             }
         }
 
-        return $response;
+        return $response->header('User-Balance', $walletBalance);
     }
 }

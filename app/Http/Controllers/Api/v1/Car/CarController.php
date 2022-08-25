@@ -10,10 +10,9 @@ use App\Models\CarModelYear;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Models\Role;
 
 
 class CarController extends BaseController
@@ -67,10 +66,11 @@ class CarController extends BaseController
         if($responseApi->getStatusCode() == 200){
             $responseData = json_decode($responseApi->getBody());
 
-
             foreach($responseData->RECORDS as $carItem){
 
-                if(!Cache::has('car_id:' . $carItem->id)){
+                $cachedCars = Redis::get('car_' . $carItem->id);
+
+                if(!isset($cachedCars)) {
                     DB::beginTransaction();
                     try{
                         $carDb = Car::where(['car_id' => $carItem->id])->first();
@@ -119,7 +119,7 @@ class CarController extends BaseController
                         DB::rollback();
                         return $this->sendInternalError();
                     }
-                    Cache::forever('car_id:'.$carItem->id, $carItem->id);
+                    Redis::set('car_' . $carItem->id, $carItem->id);
                 }
             }
         }else{

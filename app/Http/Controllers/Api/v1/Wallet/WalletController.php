@@ -10,6 +10,7 @@ use App\Models\Wallet;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class WalletController extends BaseController
@@ -50,6 +51,7 @@ class WalletController extends BaseController
                     DB::rollback();
                     return $this->sendInternalError();
                 }
+                Redis::set('wallet_' . auth()->user()->id, $wallet->balance);
 
                 $message = 'User balance increase process successfully !';
                 $status = true;
@@ -82,7 +84,15 @@ class WalletController extends BaseController
         $message = 'Failed, balance not retrieved !';
         $responseCode = 400;
 
-        $wallet = Wallet::where(['user_id'=>auth()->user()->id])->first();
+        $cachedWallet = Redis::get('wallet_' . auth()->user()->id);
+
+        if(isset($cachedWallet)) {
+            $walletBalance = $cachedWallet;
+        }else{
+            $wallet = Wallet::where(['user_id'=>auth()->user()->id])->first();
+            $walletBalance = $wallet->balance;
+            Redis::set('wallet_' . auth()->user()->id, $wallet->balance);
+        }
 
         if($wallet){
             $status = true;
@@ -97,7 +107,7 @@ class WalletController extends BaseController
             'message' => $message,
             'data'    => array_filter([
                 'success' => array_filter([
-                    'balance' => $wallet->balance ?? null,
+                    'balance' => $walletBalance ?? null,
                     'currency'=> $wallet->currency ?? null
                 ]),
                 'failed'  => array_filter([
@@ -213,6 +223,7 @@ class WalletController extends BaseController
                         return $this->sendInternalError();
                     }
 
+                    Redis::set('wallet_' . auth()->user()->id, $wallet->balance);
                     $message = 'User balance decrease process successfully !';
                     $status = true;
                     $responseCode = 200;
