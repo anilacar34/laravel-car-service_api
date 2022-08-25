@@ -40,7 +40,9 @@ Cache: Redis,<br>
 
 ### Commands
 - cars:sync
+  - Run every hour
 - order:complete
+  - Run every day
 
 #  Postman 🚀
 - **[Postman Mobile User Api v1](https://documenter.getpostman.com/view/7841503/VUqvqv6G)**
