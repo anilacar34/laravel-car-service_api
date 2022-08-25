@@ -10,6 +10,7 @@ use App\Models\CarModelYear;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
@@ -66,54 +67,59 @@ class CarController extends BaseController
         if($responseApi->getStatusCode() == 200){
             $responseData = json_decode($responseApi->getBody());
 
+
             foreach($responseData->RECORDS as $carItem){
-                DB::beginTransaction();
-                try{
-                    $carDb = Car::where(['car_id' => $carItem->id])->first();
-                    if(!$carDb){
 
-                        // brand
-                        $carBrand = CarBrand::where('name',trim($carItem->brand))->first();
-                        if(!$carBrand){
-                            $carBrand = new CarBrand;
-                            $carBrand->name = trim($carItem->brand);
-                            $carBrand->save();
-                        }
+                if(!Cache::has('car_id:' . $carItem->id)){
+                    DB::beginTransaction();
+                    try{
+                        $carDb = Car::where(['car_id' => $carItem->id])->first();
+                        if(!$carDb){
 
-                        // car model
-                        $carModelName = substr($carItem->model,(mb_strlen($carItem->brand) + 2),-(mb_strlen($carItem->year) + 2));
-
-                        $car = new Car;
-                        $car->car_id = (int)$carItem->id;
-                        $car->brand_id = (int)$carBrand->id;
-                        $car->model = $carModelName;
-                        $car->fillable(self::FILLABLE['car']);
-                        $car->fill((array)$carItem);
-                        $car->save();
-
-                        // car model year
-                        $carModelYearList = array_map('intval', explode(' - ',$carItem->year));
-                        if(isset($carModelYearList[1])){
-                            if($carModelYearList[1] === 0){ // equal to 'present'
-                                $carModelYearList[1] = Carbon::now()->year;
+                            // brand
+                            $carBrand = CarBrand::where('name',trim($carItem->brand))->first();
+                            if(!$carBrand){
+                                $carBrand = new CarBrand;
+                                $carBrand->name = trim($carItem->brand);
+                                $carBrand->save();
                             }
-                            for($i=$carModelYearList[0] + 1; $i < $carModelYearList[1]; $i++){
-                                $carModelYearList[] = $i;
-                            }
-                            $carModelYearList = collect($carModelYearList)->sort();
-                        }
 
-                        foreach ($carModelYearList as $carModelYear){
-                            CarModelYear::firstOrCreate([
-                                'car_id' => (int)$car->id,
-                                'year'   => $carModelYear
-                            ]);
+                            // car model
+                            $carModelName = substr($carItem->model,(mb_strlen($carItem->brand) + 2),-(mb_strlen($carItem->year) + 2));
+
+                            $car = new Car;
+                            $car->car_id = (int)$carItem->id;
+                            $car->brand_id = (int)$carBrand->id;
+                            $car->model = $carModelName;
+                            $car->fillable(self::FILLABLE['car']);
+                            $car->fill((array)$carItem);
+                            $car->save();
+
+                            // car model year
+                            $carModelYearList = array_map('intval', explode(' - ',$carItem->year));
+                            if(isset($carModelYearList[1])){
+                                if($carModelYearList[1] === 0){ // equal to 'present'
+                                    $carModelYearList[1] = Carbon::now()->year;
+                                }
+                                for($i=$carModelYearList[0] + 1; $i < $carModelYearList[1]; $i++){
+                                    $carModelYearList[] = $i;
+                                }
+                                $carModelYearList = collect($carModelYearList)->sort();
+                            }
+
+                            foreach ($carModelYearList as $carModelYear){
+                                CarModelYear::firstOrCreate([
+                                    'car_id' => (int)$car->id,
+                                    'year'   => $carModelYear
+                                ]);
+                            }
                         }
+                        DB::commit();
+                    }catch (\Exception $e) {
+                        DB::rollback();
+                        return $this->sendInternalError();
                     }
-                    DB::commit();
-                }catch (\Exception $e) {
-                    DB::rollback();
-                    return $this->sendInternalError();
+                    Cache::forever('car_id:'.$carItem->id, $carItem->id);
                 }
             }
         }else{
